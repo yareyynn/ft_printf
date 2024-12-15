@@ -1,32 +1,25 @@
 NAME = libftprintf.a
-LIB = libft.a
 
 CC = cc
-CFLAGS = -Wall -Wextra - Werror
+CFLAGS = -Wall -Wextra -Werror
 
-SRC = 
+SRC = ft_printf.c
 
 OBJ = $(SRC:.c=.o)
 
 all: $(NAME)
 
-$(NAME): $(OBJ) $(LIB)
-	ar rcs 
+$(NAME): $(OBJ)
+	ar rcs $(NAME) $(OBJ)
 
 %.o: %.c
-	$(CC) $(CFLAGS) $(LIB) -c $< -o $@
-
-$(LIB): 
-	make -C libft
-	make bonus -C libft
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -f $(OBJ)
-	make clean -C libft
 
 fclean: clean
 	rm -f $(NAME)
-	make fclean -C libft
 
 re: fclean all
 
