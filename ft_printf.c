@@ -3,23 +3,25 @@
 /*                                                        :::      ::::::::   */
 /*   ft_printf.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ysakarya <ysakarya@student.42.fr>          +#+  +:+       +#+        */
+/*   By: yarensakarya <yarensakarya@student.42.f    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/06 00:13:36 by ysakarya          #+#    #+#             */
-/*   Updated: 2025/01/06 00:13:37 by ysakarya         ###   ########.fr       */
+/*   Updated: 2025/01/06 04:22:43 by yarensakary      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_printf.h"
 
-static void	ft_putbase(char c, long long x, int *count, char *s)
+static void	putbase(char c, long long x, int *count, char *s)
 {
 	int	a;
 
+	a = 0;
+	while (*s++)
+		a++;
 	if (c == 'd' || c == 'i' || c == 'u')
 	{
-		a = 10;
-		if( c == 'd' || c == 'i')
+		if (c == 'd' || c == 'i')
 		{
 			if (x < 0)
 			{
@@ -29,48 +31,50 @@ static void	ft_putbase(char c, long long x, int *count, char *s)
 		}
 	}
 	else
-		a = 16;
+	{
+		if (c == 'p')
+			*count += write(1, "0x", 2);
+	}
 	if (x / a)
-		ft_putbase(c, x / a, count, s);
+		putbase('y', x / a, count, s);
 	*count += write(1, &s[x % a], 1);
 }
 
-static void ft_formatp(char c, unsigned long x, int *count)
+static void	ft_putstr(char *s, int *count)
 {
-	if (x == 0)
-		*count += write(1, "nil", 3);
+	if (!s)
+		*count += write(1, "(nil)", 5);
 	else
 	{
-		*count += write(1, "0x", 2);
-		ft_putbase(c, x, count, "0123456789abcdef");
+		while (*s)
+			*count += write(1, s++, 1);
 	}
 }
 
-static void	ft_filter(char c, int *count, va_list args)
+static void	filter(char c, int *count, va_list args)
 {
-	char *str;
-
 	if (c == 'c')
 	{
 		c = va_arg(args, int);
 		*count += write(1, &c, 1);
 	}
 	else if (c == 's')
-	{
-		str = va_arg(args, char*);
-		while (*str)
-			*count += write(1, str++, 1);
-	}
+		ft_putstr(va_arg(args, char *), count);
 	else if (c == 'p')
-		ft_formatp(c, va_arg(args, unsigned long), count);
+	{
+		if (va_arg(args, unsigned long) == 0)
+			*count += write(1, "(nil)", 5);
+		else
+			putbase(c, va_arg(args, unsigned long), count, "0123456789abcdef");
+	}
 	else if (c == 'd' || c == 'i')
-		ft_putbase(c, va_arg(args, int), count, "0123456789");
+		putbase(c, va_arg(args, int), count, "0123456789");
 	else if (c == 'u')
-		ft_putbase(c, va_arg(args, unsigned int), count, "0123456789");
+		putbase(c, va_arg(args, unsigned int), count, "0123456789");
 	else if (c == 'x')
-		ft_putbase(c, va_arg(args, unsigned int), count, "0123456789abcdef");
+		putbase(c, va_arg(args, unsigned int), count, "0123456789abcdef");
 	else if (c == 'X')
-		ft_putbase(c, va_arg(args, unsigned int), count, "0123456789ABCDEF");
+		putbase(c, va_arg(args, unsigned int), count, "0123456789ABCDEF");
 	else if (c == '%')
 		*count += write(1, &c, 1);
 }
@@ -85,11 +89,11 @@ int	ft_printf(const char *str, ...)
 	while (*str)
 	{
 		if (*str == '%' && *(++str))
-			ft_filter(*str, &count, args);
+			filter(*str, &count, args);
 		else
 			count += write(1, str, 1);
 		str++;
 	}
 	va_end(args);
-	return count;
+	return (count);
 }
